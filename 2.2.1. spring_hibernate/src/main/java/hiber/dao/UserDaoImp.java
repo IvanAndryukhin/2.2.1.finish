@@ -1,29 +1,28 @@
 package hiber.dao;
 
-import hiber.model.Car;
 import hiber.model.User;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.Query;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository
 public class UserDaoImp implements UserDao {
 
-    @Autowired
-    private SessionFactory sessionFactory;
+    private final SessionFactory sessionFactory;
+
+    public UserDaoImp(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
 
     @Override
     public void add(User user) {
-        sessionFactory.getCurrentSession().save(user);
+        sessionFactory.getCurrentSession().persist(user);
     }
 
-    public void addCar(Car car) {
-        sessionFactory.getCurrentSession().save(car);
-    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -32,14 +31,21 @@ public class UserDaoImp implements UserDao {
         return query.getResultList();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public User getUserByCar(String model, int series) {
-        String hql = "from User where car.model=:model and car.series=:series";
-        Query query = sessionFactory.getCurrentSession().createQuery(hql);
-        query.setParameter("model", model);
-        query.setParameter("series", series);
-        List<User> users = query.setMaxResults(1).getResultList();
-        return users.isEmpty() ? null : users.get(0);
+        String hql = "SELECT user FROM User user JOIN FETCH user.car WHERE user.car.model" +
+                " = :model AND user.car.series = :series";
+        TypedQuery<User> query = sessionFactory.getCurrentSession().createQuery(hql);
+        query.setParameter("model", model).setParameter("series", series);
+
+        List<User> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            throw new NoResultException();
+        }
+        return resultList.get(0);
     }
 }
+
+
+

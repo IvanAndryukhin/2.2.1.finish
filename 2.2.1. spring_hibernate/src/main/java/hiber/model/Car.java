@@ -15,7 +15,7 @@ public class Car {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "user_id")
     private long cars_id;
 
     @Column(name = "model")
@@ -27,19 +27,14 @@ public class Car {
     public Car() {
     }
 
-    public Car(long cars_id, String model, int series) {
-        this.cars_id = cars_id;
+    public Car(String model, int series) {
         this.model = model;
         this.series = series;
     }
 
     @OneToOne
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "user_id")
     private User user;
-
-    public Car(User user) {
-        this.user = user;
-    }
 
 
     public long getCars_id() {
@@ -72,6 +67,9 @@ public class Car {
 
     public void setUser(User user) {
         this.user = user;
+        if (user != null) {
+            user.setCar(this);
+        }
     }
 
     @Override
